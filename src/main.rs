@@ -3,6 +3,7 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 
 use gui::view::board_view::Renderer;
+use gui::model::game::{self, make_blank_board, GameState, BoardPiece};
 
 
 fn main() -> Result<(), String> {
@@ -20,10 +21,9 @@ fn main() -> Result<(), String> {
         .build()
         .unwrap();
 
-    let board_view = Renderer{
-        screen_area: Rect::new(0,0, screen_width, screen_height),
-        clear_color: Color::RGB(64, 192, 255),
-    };
+    let board_view = Renderer::new(screen_width,screen_height);
+
+    let mut game_state = GameState::new();
 
     
     let mut running = true;
@@ -38,17 +38,16 @@ fn main() -> Result<(), String> {
                     running = false;
                 },
                 
-                Event::MouseMotion { 
-                    x, y, xrel, yrel, .. } => {
-                        
-                        println!("Mouse x: {}, y: {}", x, y);
-                        println!("Relative x: {}, y: {}", xrel, yrel);
-                    },
-                    
-                    _ => {}
+                Event::MouseButtonDown { x, y ,..} => {
+                    let col : usize = (5 * x / board_view.screen_area.w).try_into().unwrap();
+                    let row : usize = (5 * y / board_view.screen_area.h).try_into().unwrap();
+                    game_state.handle_click(row, col)
                 }
+                    
+                _ => {}
             }
-            board_view.render(&mut canvas);
+            }
+            board_view.render(&mut canvas, &game_state.board);
             canvas.present();
         }
         
